@@ -205,33 +205,17 @@ async function loadSheet(sheetId) {
   wrap.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>กำลังโหลดข้อมูล...</div></div>';
   document.getElementById('filters').style.display = 'none';
 
-  // JSONP — ทำงานได้ทั้ง file:// และ https://
-  const callbackName = 'gvizCallback_' + Date.now();
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=%E0%B8%8A%E0%B8%B5%E0%B8%951&callback=${callbackName}`;
+  // fetch gviz JSON — ไม่ต้อง API key, รองรับ public sheet
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
   try {
-    const json = await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      const timer = setTimeout(() => {
-        delete window[callbackName];
-        script.remove();
-        reject(new Error('Timeout — ตรวจสอบ Sheet ID และสิทธิ์การเข้าถึง'));
-      }, 10000);
-      window[callbackName] = (data) => {
-        clearTimeout(timer);
-        delete window[callbackName];
-        script.remove();
-        resolve(data);
-      };
-      script.onerror = () => {
-        clearTimeout(timer);
-        delete window[callbackName];
-        script.remove();
-        reject(new Error('โหลดไม่ได้ — ตรวจสอบ Sheet ID และสิทธิ์การเข้าถึง'));
-      };
-      script.src = url;
-      document.head.appendChild(script);
-    });
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    // strip /*O_o*/ prefix and closing )
+    const clean = text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, '');
+    const json = JSON.parse(clean);
+    if (json.status === 'error') throw new Error(json.errors?.[0]?.message || 'Sheets error');
     const matches = parseGviz(json);
     if (!matches.length) throw new Error('ไม่พบข้อมูลในชีต หรือ header row ไม่ถูกต้อง');
     renderSchedule(matches);
