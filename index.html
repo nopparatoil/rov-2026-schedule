@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตารางการแข่งขัน ROV 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a1a;
+    --bg2: #0a1428;
+    --bg3: #0f1e3a;
+    --accent: #00d4ff;
+    --accent2: #7b2fff;
+    --gold: #ffd700;
+    --text: #e2e8f0;
+    --text-dim: #7a8fa6;
+    --group-a: #00d4ff;
+    --group-b: #7b2fff;
+    --playoff: #ff6b35;
+    --semifinal: #ffd700;
+    --final: #ff4466;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(123,47,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .header-badge {
+    display: inline-block;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 6px 20px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 900;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+
+  .header-sub {
+    color: var(--text-dim);
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 1px;
+  }
+
+  /* Filters */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 36px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .filter-btn {
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text-dim);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active-all { border-color: var(--accent); background: rgba(0,212,255,0.12); color: var(--accent); }
+  .filter-btn.active-a { border-color: var(--group-a); background: rgba(0,212,255,0.12); color: var(--group-a); }
+  .filter-btn.active-b { border-color: var(--group-b); background: rgba(123,47,255,0.15); color: var(--group-b); }
+  .filter-btn.active-playoff { border-color: var(--semifinal); background: rgba(255,215,0,0.1); color: var(--semifinal); }
+
+  /* Month groups */
+  .month-section {
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .month-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .month-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Match card */
+  .match-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 120px 1fr auto 1fr 100px;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .match-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .match-card.group-a::before { background: var(--group-a); }
+  .match-card.group-b::before { background: var(--group-b); }
+  .match-card.playoff::before { background: var(--playoff); }
+  .match-card.semifinal::before { background: var(--semifinal); box-shadow: 0 0 12px var(--semifinal); }
+  .match-card.final::before { background: var(--final); box-shadow: 0 0 16px var(--final); }
+
+  .match-card:hover {
+    border-color: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06);
+    transform: translateX(3px);
+  }
+
+  .match-card.hidden { display: none; }
+
+  /* Today highlight */
+  .match-card.today {
+    border-color: #00ff88 !important;
+    background: rgba(0,255,136,0.07) !important;
+    box-shadow: 0 0 0 1px rgba(0,255,136,0.3), 0 0 24px rgba(0,255,136,0.12);
+    animation: pulse-today 2.5s ease-in-out infinite;
+  }
+  .match-card.today .date-num { color: #00ff88 !important; }
+  .match-card.today .match-time { color: #00ff88 !important; }
+
+  .today-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #00ff88;
+    color: #050a1a;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    position: absolute;
+    top: 10px; right: 14px;
+    animation: pulse-badge 2.5s ease-in-out infinite;
+  }
+  .today-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: #050a1a;
+    border-radius: 50%;
+    animation: blink 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse-today {
+    0%,100% { box-shadow: 0 0 0 1px rgba(0,255,136,0.3), 0 0 24px rgba(0,255,136,0.12); }
+    50%      { box-shadow: 0 0 0 1px rgba(0,255,136,0.6), 0 0 40px rgba(0,255,136,0.25); }
+  }
+  @keyframes pulse-badge {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.75; }
+  }
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.2; }
+  }
+
+  /* Today banner */
+  .today-banner {
+    border: 1px solid rgba(0,255,136,0.35);
+    background: rgba(0,255,136,0.07);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #00ff88;
+    font-weight: 600;
+    animation: fadeUp 0.5s ease both;
+  }
+  .today-banner .dot {
+    width: 10px; height: 10px;
+    background: #00ff88;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: blink 1s ease-in-out infinite;
+  }
+  .today-banner.no-match {
+    border-color: var(--border);
+    background: var(--card);
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .today-banner.no-match .dot { background: var(--text-dim); animation: none; }
+
+  /* Date block */
+  .date-block {
+    text-align: center;
+  }
+
+  .date-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .date-month {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  .date-day {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 1px;
+  }
+
+  /* Team names */
+  .team {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .team-a { text-align: right; }
+  .team-b { text-align: left; }
+
+  .team-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+
+  .group-a .team-tag { background: rgba(0,212,255,0.15); color: var(--group-a); }
+  .group-b .team-tag { background: rgba(123,47,255,0.2); color: #a67eff; }
+  .playoff .team-tag, .semifinal .team-tag, .final .team-tag {
+    background: rgba(255,215,0,0.15); color: var(--gold);
+  }
+
+  /* VS badge */
+  .vs-badge {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+
+  /* Time */
+  .match-time {
+    text-align: right;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  /* Special match styles */
+  .semifinal { background: rgba(255,215,0,0.04); }
+  .final { background: rgba(255,68,102,0.06); }
+
+  .semifinal .team, .final .team { color: #fff; }
+
+  /* Stage labels for playoff */
+  .stage-label {
+    position: absolute;
+    top: 10px; right: 14px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* Summary bar */
+  .summary {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .stat-pill {
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 10px;
+    padding: 10px 20px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .stat-label { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .match-card {
+      grid-template-columns: 70px 1fr auto 1fr 70px;
+      padding: 14px 14px 14px 18px;
+      gap: 8px;
+    }
+    .date-num { font-size: 20px; }
+    .team { font-size: 13px; }
+    .match-time { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-badge">🎮 ROV League Season 2026</div>
+    <h1>ตารางการแข่งขัน</h1>
+    <p class="header-sub">ROV 2026 · พฤษภาคม — กันยายน 2569</p>
+  </div>
+
+  <div class="summary">
+    <div class="stat-pill">
+      <div class="stat-num" style="color:var(--accent)">34</div>
+      <div class="stat-label">คู่การแข่งขัน</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num" style="color:var(--group-a)">12</div>
+      <div class="stat-label">ทีม สาย A + B</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num" style="color:var(--gold)">3</div>
+      <div class="stat-label">รอบ Playoff</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num" style="color:var(--text-dim)">15:00</div>
+      <div class="stat-label">เวลาแข่งทุกคู่</div>
+    </div>
+  </div>
+
+  <div id="today-banner"></div>
+
+  <div class="filters">
+    <button class="filter-btn active-all" onclick="filter('all', this)">ทั้งหมด</button>
+    <button class="filter-btn" onclick="filter('group-a', this)">🔵 สาย A</button>
+    <button class="filter-btn" onclick="filter('group-b', this)">🟣 สาย B</button>
+    <button class="filter-btn" onclick="filter('playoff', this)">⭐ Playoff / รอบรองฯ / รอบชิงฯ</button>
+  </div>
+
+  <!-- MAY -->
+  <div class="month-section">
+    <div class="month-label">พฤษภาคม 2569</div>
+
+    <div data-date="2026-05-05" class="match-card group-a">
+      <div class="date-block"><div class="date-num">5</div><div class="date-month">พ.ค. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>SeaMA</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>เพื่อไร</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-05-07" class="match-card group-a">
+      <div class="date-block"><div class="date-num">7</div><div class="date-month">พ.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>อะไหล่วัยรุ่น</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>Kamala Thanee</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-05-14" class="match-card group-a">
+      <div class="date-block"><div class="date-num">14</div><div class="date-month">พ.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>ภูมิใจไร</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>สมศรีขี่มีโอ</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-05-21" class="match-card group-a">
+      <div class="date-block"><div class="date-num">21</div><div class="date-month">พ.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>ตะวันแดงสาดแสงส่อง</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>Kamala Thanee</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-05-26" class="match-card group-b">
+      <div class="date-block"><div class="date-num">26</div><div class="date-month">พ.ค. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>Crew Boat ล้มแชมป์</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>ลูกแม่น้อง promax</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-05-28" class="match-card group-a">
+      <div class="date-block"><div class="date-num">28</div><div class="date-month">พ.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>กล้าทำไร</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>อะไหล่วัยรุ่น</div>
+      <div class="match-time">15:00</div>
+    </div>
+  </div>
+
+  <!-- JUNE -->
+  <div class="month-section">
+    <div class="month-label">มิถุนายน 2569</div>
+
+    <div data-date="2026-06-04" class="match-card group-a">
+      <div class="date-block"><div class="date-num">4</div><div class="date-month">มิ.ย. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>ภูมิใจไร</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>Kamala Thanee</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-06-05" class="match-card group-b">
+      <div class="date-block"><div class="date-num">5</div><div class="date-month">มิ.ย. 69</div><div class="date-day">ศุกร์</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>SeaMA</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>ขุนโต Slayer</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-06-09" class="match-card group-b">
+      <div class="date-block"><div class="date-num">9</div><div class="date-month">มิ.ย. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>Nava Thanee แชมป์เก่า</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>ลูกแม่น้อง promax</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-06-11" class="match-card group-a">
+      <div class="date-block"><div class="date-num">11</div><div class="date-month">มิ.ย. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>สมศรีขี่มีโอ</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>อะไหล่วัยรุ่น</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-06-16" class="match-card group-b">
+      <div class="date-block"><div class="date-num">16</div><div class="date-month">มิ.ย. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>เพื่อไร</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>ขุนโต Slayer</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-06-18" class="match-card group-a">
+      <div class="date-block"><div class="date-num">18</div><div class="date-month">มิ.ย. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>ตะวันแดงสาดแสงส่อง</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>กล้าทำไร</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-06-19" class="match-card group-b">
+      <div class="date-block"><div class="date-num">19</div><div class="date-month">มิ.ย. 69</div><div class="date-day">ศุกร์</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>ขุนโต Slayer</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>ลูกแม่น้อง promax</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-06-23" class="match-card group-b">
+      <div class="date-block"><div class="date-num">23</div><div class="date-month">มิ.ย. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>Crew Boat ล้มแชมป์</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>SeaMA</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-06-25" class="match-card group-a">
+      <div class="date-block"><div class="date-num">25</div><div class="date-month">มิ.ย. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>ภูมิใจไร</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>อะไหล่วัยรุ่น</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-06-30" class="match-card group-b">
+      <div class="date-block"><div class="date-num">30</div><div class="date-month">มิ.ย. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>Nava Thanee แชมป์เก่า</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>ขุนโต Slayer</div>
+      <div class="match-time">15:00</div>
+    </div>
+  </div>
+
+  <!-- JULY -->
+  <div class="month-section">
+    <div class="month-label">กรกฎาคม 2569</div>
+
+    <div data-date="2026-07-02" class="match-card group-a">
+      <div class="date-block"><div class="date-num">2</div><div class="date-month">ก.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>Kamala Thanee</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>กล้าทำไร</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-07-09" class="match-card group-a">
+      <div class="date-block"><div class="date-num">9</div><div class="date-month">ก.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>สมศรีขี่มีโอ</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>ตะวันแดงสาดแสงส่อง</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-07-14" class="match-card group-b">
+      <div class="date-block"><div class="date-num">14</div><div class="date-month">ก.ค. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>เพื่อไร</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>Crew Boat ล้มแชมป์</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-07-16" class="match-card group-a">
+      <div class="date-block"><div class="date-num">16</div><div class="date-month">ก.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>ภูมิใจไร</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>กล้าทำไร</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-07-17" class="match-card group-b">
+      <div class="date-block"><div class="date-num">17</div><div class="date-month">ก.ค. 69</div><div class="date-day">ศุกร์</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>ลูกแม่น้อง promax</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>SeaMA</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-07-21" class="match-card group-b">
+      <div class="date-block"><div class="date-num">21</div><div class="date-month">ก.ค. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>Nava Thanee แชมป์เก่า</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>SeaMA</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-07-23" class="match-card group-a">
+      <div class="date-block"><div class="date-num">23</div><div class="date-month">ก.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>อะไหล่วัยรุ่น</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>ตะวันแดงสาดแสงส่อง</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-07-30" class="match-card group-b">
+      <div class="date-block"><div class="date-num">30</div><div class="date-month">ก.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>ขุนโต Slayer</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>Crew Boat ล้มแชมป์</div>
+      <div class="match-time">15:00</div>
+    </div>
+  </div>
+
+  <!-- AUGUST -->
+  <div class="month-section">
+    <div class="month-label">สิงหาคม 2569</div>
+
+    <div data-date="2026-08-04" class="match-card group-a">
+      <div class="date-block"><div class="date-num">4</div><div class="date-month">ส.ค. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>Kamala Thanee</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>สมศรีขี่มีโอ</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-08-06" class="match-card group-b">
+      <div class="date-block"><div class="date-num">6</div><div class="date-month">ส.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>ลูกแม่น้อง promax</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>เพื่อไร</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-08-11" class="match-card group-a">
+      <div class="date-block"><div class="date-num">11</div><div class="date-month">ส.ค. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>ภูมิใจไร</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>ตะวันแดงสาดแสงส่อง</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-08-13" class="match-card group-b">
+      <div class="date-block"><div class="date-num">13</div><div class="date-month">ส.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>Nava Thanee แชมป์เก่า</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>Crew Boat ล้มแชมป์</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-08-18" class="match-card group-a">
+      <div class="date-block"><div class="date-num">18</div><div class="date-month">ส.ค. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">A</div><br>กล้าทำไร</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">A</div><br>สมศรีขี่มีโอ</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <div data-date="2026-08-19" class="match-card group-b">
+      <div class="date-block"><div class="date-num">19</div><div class="date-month">ส.ค. 69</div><div class="date-day">พุธ</div></div>
+      <div class="team team-a"><div class="team-tag">B</div><br>Nava Thanee แชมป์เก่า</div>
+      <div class="vs-badge">VS</div>
+      <div class="team team-b"><div class="team-tag">B</div><br>เพื่อไร</div>
+      <div class="match-time">15:00</div>
+    </div>
+
+    <!-- PLAYOFF -->
+    <div data-date="2026-08-20" class="match-card semifinal" data-type="playoff">
+      <div class="stage-label">รอบรองชนะเลิศ</div>
+      <div class="date-block"><div class="date-num">20</div><div class="date-month">ส.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">⭐</div><br>ที่ 2 สาย A</div>
+      <div class="vs-badge" style="color:var(--gold);border-color:rgba(255,215,0,0.3)">VS</div>
+      <div class="team team-b"><div class="team-tag">⭐</div><br>ที่ 1 สาย B</div>
+      <div class="match-time" style="color:var(--gold)">15:00</div>
+    </div>
+
+    <div data-date="2026-08-25" class="match-card semifinal" data-type="playoff">
+      <div class="stage-label">รอบรองชนะเลิศ</div>
+      <div class="date-block"><div class="date-num">25</div><div class="date-month">ส.ค. 69</div><div class="date-day">อังคาร</div></div>
+      <div class="team team-a"><div class="team-tag">⭐</div><br>ที่ 1 สาย A</div>
+      <div class="vs-badge" style="color:var(--gold);border-color:rgba(255,215,0,0.3)">VS</div>
+      <div class="team team-b"><div class="team-tag">⭐</div><br>ที่ 2 สาย B</div>
+      <div class="match-time" style="color:var(--gold)">15:00</div>
+    </div>
+
+    <div data-date="2026-08-27" class="match-card playoff" data-type="playoff">
+      <div class="stage-label">รอบ 3rd Place</div>
+      <div class="date-block"><div class="date-num">27</div><div class="date-month">ส.ค. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag">⭐</div><br>ผู้แพ้คู่ที่ 31</div>
+      <div class="vs-badge" style="color:var(--playoff);border-color:rgba(255,107,53,0.3)">VS</div>
+      <div class="team team-b"><div class="team-tag">⭐</div><br>ผู้แพ้คู่ที่ 32</div>
+      <div class="match-time" style="color:var(--playoff)">15:00</div>
+    </div>
+  </div>
+
+  <!-- SEPTEMBER -->
+  <div class="month-section">
+    <div class="month-label" style="color: var(--final)">กันยายน 2569 · รอบชิงชนะเลิศ</div>
+
+    <div data-date="2026-09-03" class="match-card final" data-type="playoff">
+      <div class="stage-label" style="color:var(--final);opacity:1">🏆 GRAND FINAL</div>
+      <div class="date-block"><div class="date-num" style="color:var(--final)">3</div><div class="date-month">ก.ย. 69</div><div class="date-day">พฤหัสบดี</div></div>
+      <div class="team team-a"><div class="team-tag" style="background:rgba(255,68,102,0.15);color:var(--final)">🏆</div><br>ผู้ชนะคู่ที่ 31</div>
+      <div class="vs-badge" style="color:var(--final);border-color:rgba(255,68,102,0.3);font-size:14px">VS</div>
+      <div class="team team-b"><div class="team-tag" style="background:rgba(255,68,102,0.15);color:var(--final)">🏆</div><br>ผู้ชนะคู่ที่ 32</div>
+      <div class="match-time" style="color:var(--final)">15:00</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---- Today highlight ----
+(function() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const todayISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+
+  const banner = document.getElementById('today-banner');
+  const todayCards = [];
+
+  document.querySelectorAll('.match-card[data-date]').forEach(card => {
+    if (card.dataset.date === todayISO) {
+      card.classList.add('today');
+      // Remove existing stage-label if present to avoid overlap, insert today badge
+      const existing = card.querySelector('.stage-label');
+      if (existing) existing.remove();
+      const badge = document.createElement('div');
+      badge.className = 'today-badge';
+      badge.textContent = 'วันนี้ LIVE';
+      card.appendChild(badge);
+      todayCards.push(card);
+    }
+  });
+
+  // Build banner
+  const thaiMonths = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const d = now.getDate(), m = thaiMonths[now.getMonth()+1], y = now.getFullYear()+543;
+  const dateStr = `${d} ${m} ${y}`;
+
+  if (todayCards.length > 0) {
+    banner.innerHTML = `<div class="dot"></div><span>📅 วันนี้ ${dateStr} — มีการแข่งขัน <strong>${todayCards.length} คู่</strong> กำลังจะเริ่มเวลา 15:00 น.</span>`;
+    // Scroll to first today card after a short delay
+    setTimeout(() => todayCards[0].scrollIntoView({ behavior:'smooth', block:'center' }), 400);
+  } else {
+    // Find next match
+    const upcoming = [...document.querySelectorAll('.match-card[data-date]')]
+      .filter(c => c.dataset.date > todayISO)
+      .sort((a,b) => a.dataset.date.localeCompare(b.dataset.date));
+    let nextMsg = '';
+    if (upcoming.length) {
+      const nextDate = upcoming[0].dataset.date;
+      const [ny, nm, nd] = nextDate.split('-').map(Number);
+      nextMsg = ` · นัดหน้า: <strong>${nd} ${thaiMonths[nm]} ${ny+543}</strong>`;
+    }
+    banner.innerHTML = `<div class="dot"></div><span>📅 วันนี้ ${dateStr} — ไม่มีการแข่งขัน${nextMsg}</span>`;
+    banner.querySelector('.today-banner') && banner.querySelector('.today-banner').classList.add('no-match');
+  }
+  banner.firstElementChild && banner.firstElementChild.classList.add('today-banner');
+
+  // Fix: banner is the container, re-wrap properly
+  const inner = banner.innerHTML;
+  banner.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'today-banner' + (todayCards.length === 0 ? ' no-match' : '');
+  wrap.innerHTML = inner;
+  banner.appendChild(wrap);
+})();
+
+// ---- Filter ----
+function filter(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.className = 'filter-btn';
+  });
+  if (type === 'all') btn.className = 'filter-btn active-all';
+  else if (type === 'group-a') btn.className = 'filter-btn active-a';
+  else if (type === 'group-b') btn.className = 'filter-btn active-b';
+  else if (type === 'playoff') btn.className = 'filter-btn active-playoff';
+
+  document.querySelectorAll('.match-card').forEach(card => {
+    if (type === 'all') {
+      card.classList.remove('hidden');
+    } else if (type === 'playoff') {
+      const isPlayoff = card.classList.contains('playoff') || card.classList.contains('semifinal') || card.classList.contains('final');
+      card.classList.toggle('hidden', !isPlayoff);
+    } else {
+      card.classList.toggle('hidden', !card.classList.contains(type));
+    }
+  });
+
+  document.querySelectorAll('.month-section').forEach(section => {
+    const visible = section.querySelectorAll('.match-card:not(.hidden)');
+    section.style.display = visible.length ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
