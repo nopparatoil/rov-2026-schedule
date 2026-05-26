@@ -310,63 +310,66 @@ function parseGviz(json) {
 let cdTimer = null;
 
 function buildCountdown(matches, todayISO) {
-  const wrap = document.getElementById('countdown-wrap');
-  if (!wrap) return;
-  if (cdTimer) clearInterval(cdTimer);
+  try {
+    const wrap = document.getElementById('countdown-wrap');
+    if (!wrap) return;
+    if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
 
-  const thaiM = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const pad = n => String(n).padStart(2,'0');
+    const thaiM = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const pad = n => String(Math.floor(n)).padStart(2,'0');
+    const now = new Date();
 
-  // Find next match whose time hasn't passed yet
-  const now = new Date();
-  let next = null;
-  for (const m of matches) {
-    if (m.isoDate < todayISO) continue;
-    const [hh2, mm2] = (m.time || '15:00').split(':').map(Number);
-    const t = new Date(m.isoDate + 'T00:00:00');
-    t.setHours(hh2, mm2, 0, 0);
-    if (t > now) { next = m; break; }
-  }
-  if (!next) { wrap.innerHTML = ''; return; }
-
-  const [hh, mm] = (next.time || '15:00').split(':').map(Number);
-  const target = new Date(next.isoDate + 'T00:00:00');
-  target.setHours(hh, mm, 0, 0);
-
-  const isToday = next.isoDate === todayISO;
-  const typeLabel = next.type === 'group-a' ? 'สาย A' : next.type === 'group-b' ? 'สาย B' : next.type === 'final' ? '🏆 รอบชิงชนะเลิศ' : next.type === 'semifinal' ? 'รอบรองชนะเลิศ' : 'Playoff';
-  const dateStr = `${next.day} ${thaiM[next.month]} ${next.year+543} · ${next.time} น. · ${typeLabel}`;
-
-  wrap.innerHTML = `
-    <div class="cd-card${isToday?' cd-live':''}" id="cd-card">
-      <div class="cd-title">${isToday ? '🔴 แข่งวันนี้' : '⏱ นัดถัดไป'}</div>
-      <div class="cd-matchname">${next.teamA} vs ${next.teamB}</div>
-      <div class="cd-matchdate">${dateStr}</div>
-      <div class="cd-units">
-        <div class="cd-unit"><div class="cd-num" id="cd-d">00</div><div class="cd-label">วัน</div></div>
-        <div class="cd-unit"><div class="cd-num" id="cd-h">00</div><div class="cd-label">ชั่วโมง</div></div>
-        <div class="cd-unit"><div class="cd-num" id="cd-m">00</div><div class="cd-label">นาที</div></div>
-        <div class="cd-unit"><div class="cd-num" id="cd-s">00</div><div class="cd-label">วินาที</div></div>
-      </div>
-    </div>`;
-
-  function tick() {
-    const diff = Math.max(0, target - Date.now());
-    if (diff === 0) {
-      document.getElementById('cd-d').textContent = '00';
-      document.getElementById('cd-h').textContent = '00';
-      document.getElementById('cd-m').textContent = '00';
-      document.getElementById('cd-s').textContent = '00';
-      clearInterval(cdTimer);
-      return;
+    // Find next match whose kickoff time is in the future
+    let next = null;
+    for (const m of matches) {
+      if (m.isoDate < todayISO) continue;
+      const parts = (m.time || '15:00').split(':');
+      const t = new Date(m.isoDate + 'T' + parts[0].padStart(2,'0') + ':' + (parts[1]||'00').padStart(2,'0') + ':00');
+      if (t > now) { next = m; break; }
     }
-    document.getElementById('cd-d').textContent = pad(Math.floor(diff/86400000));
-    document.getElementById('cd-h').textContent = pad(Math.floor((diff%86400000)/3600000));
-    document.getElementById('cd-m').textContent = pad(Math.floor((diff%3600000)/60000));
-    document.getElementById('cd-s').textContent = pad(Math.floor((diff%60000)/1000));
+
+    if (!next) { wrap.innerHTML = ''; return; }
+
+    const timeParts = (next.time || '15:00').split(':');
+    const target = new Date(next.isoDate + 'T' + timeParts[0].padStart(2,'0') + ':' + (timeParts[1]||'00').padStart(2,'0') + ':00');
+    const isToday = next.isoDate === todayISO;
+    const typeLabel = {'group-a':'สาย A','group-b':'สาย B','final':'🏆 รอบชิงชนะเลิศ','semifinal':'รอบรองชนะเลิศ','playoff':'Playoff'}[next.type] || next.type;
+    const dateStr = next.day + ' ' + thaiM[next.month] + ' ' + (next.year+543) + ' · ' + next.time + ' น. · ' + typeLabel;
+
+    wrap.innerHTML =
+      '<div class="cd-card' + (isToday ? ' cd-live' : '') + '">' +
+        '<div class="cd-title">' + (isToday ? '🔴 แข่งวันนี้' : '⏱ นัดถัดไป') + '</div>' +
+        '<div class="cd-matchname">' + next.teamA + ' vs ' + next.teamB + '</div>' +
+        '<div class="cd-matchdate">' + dateStr + '</div>' +
+        '<div class="cd-units">' +
+          '<div class="cd-unit"><div class="cd-num" id="cd-d">--</div><div class="cd-label">วัน</div></div>' +
+          '<div class="cd-unit"><div class="cd-num" id="cd-h">--</div><div class="cd-label">ชั่วโมง</div></div>' +
+          '<div class="cd-unit"><div class="cd-num" id="cd-m">--</div><div class="cd-label">นาที</div></div>' +
+          '<div class="cd-unit"><div class="cd-num" id="cd-s">--</div><div class="cd-label">วินาที</div></div>' +
+        '</div>' +
+      '</div>';
+
+    function tick() {
+      const diff = target - new Date();
+      if (diff <= 0) {
+        ['d','h','m','s'].forEach(k => { const el = document.getElementById('cd-'+k); if(el) el.textContent = '00'; });
+        clearInterval(cdTimer); cdTimer = null;
+        return;
+      }
+      const el_d = document.getElementById('cd-d');
+      const el_h = document.getElementById('cd-h');
+      const el_m = document.getElementById('cd-m');
+      const el_s = document.getElementById('cd-s');
+      if (el_d) el_d.textContent = pad(diff/86400000);
+      if (el_h) el_h.textContent = pad((diff%86400000)/3600000);
+      if (el_m) el_m.textContent = pad((diff%3600000)/60000);
+      if (el_s) el_s.textContent = pad((diff%60000)/1000);
+    }
+    tick();
+    cdTimer = setInterval(tick, 1000);
+  } catch(e) {
+    console.error('Countdown error:', e);
   }
-  tick();
-  cdTimer = setInterval(tick, 1000);
 }
 
 function renderSchedule(matches) {
