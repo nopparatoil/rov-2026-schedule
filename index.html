@@ -86,6 +86,7 @@
   .filter-btn.active-b    { border-color:var(--group-b); background:rgba(123,47,255,0.15); color:var(--group-b); }
   .filter-btn.active-playoff { border-color:var(--semifinal); background:rgba(255,215,0,0.1); color:var(--semifinal); }
 
+
   /* Month */
   .month-section { margin-bottom:32px; }
   .month-label { display:flex; align-items:center; gap:12px; margin-bottom:12px; font-size:12px; font-family:'Orbitron',sans-serif; letter-spacing:2px; color:var(--text-dim); }
@@ -108,6 +109,20 @@
   .match-card.final::before { background:var(--final); box-shadow:0 0 16px var(--final); }
   .match-card:hover { border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); transform:translateX(3px); }
   .match-card.hidden { display:none; }
+
+  /* Countdown */
+  .cd-card{background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-radius:14px;padding:20px 24px;margin-bottom:28px;animation:fadeUp .6s ease both}
+  .cd-card .cd-title{font-size:11px;color:#00d4ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+  .cd-card .cd-matchname{font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:4px}
+  .cd-card .cd-matchdate{font-size:12px;color:#3a6a7a;margin-bottom:16px}
+  .cd-card .cd-units{display:flex;gap:12px;flex-wrap:wrap}
+  .cd-card .cd-unit{background:rgba(0,0,0,0.3);border:1px solid rgba(0,212,255,0.1);border-radius:10px;padding:10px 16px;text-align:center;min-width:60px}
+  .cd-card .cd-num{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700;color:#00d4ff;line-height:1}
+  .cd-card .cd-label{font-size:10px;color:#2a5a6a;margin-top:4px;letter-spacing:1px}
+  .cd-card.cd-live{background:rgba(0,255,136,0.06);border-color:rgba(0,255,136,0.25)}
+  .cd-card.cd-live .cd-title{color:#00ff88}
+  .cd-card.cd-live .cd-num{color:#00ff88}
+  .cd-card.cd-live .cd-unit{border-color:rgba(0,255,136,0.15)}
 
   /* Today highlight */
   .match-card.today { border-color:#00ff88 !important; background:rgba(0,255,136,0.07) !important; animation:pulse-today 2.5s ease-in-out infinite; }
@@ -174,6 +189,7 @@
 
 
   <div id="today-banner-wrap"></div>
+  <div id="countdown-wrap"></div>
 
   <div id="summary-wrap"></div>
 
@@ -183,6 +199,7 @@
     <button class="filter-btn" onclick="filter('group-b',this)">🟣 สาย B</button>
     <button class="filter-btn" onclick="filter('playoff',this)">⭐ Playoff / รอบรองฯ / รอบชิงฯ</button>
   </div>
+
 
   <div id="schedule-wrap">
     <div class="loading"><div class="loading-spinner"></div><div>กำลังโหลดข้อมูล...</div></div>
@@ -213,7 +230,7 @@ async function loadSheet(sheetId) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     // strip /*O_o*/ prefix and closing )
-    const clean = text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, '');
+    const clean = text.slice(text.indexOf('(') + 1, text.lastIndexOf(')'));
     const json = JSON.parse(clean);
     if (json.status === 'error') throw new Error(json.errors?.[0]?.message || 'Sheets error');
     const matches = parseGviz(json);
@@ -290,6 +307,60 @@ function parseGviz(json) {
 }
 
 // ---- Render ----
+let cdTimer = null;
+
+function buildCountdown(matches, todayISO) {
+  const wrap = document.getElementById('countdown-wrap');
+  if (!wrap) return;
+  if (cdTimer) clearInterval(cdTimer);
+
+  const thaiM = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const pad = n => String(n).padStart(2,'0');
+
+  // Find next match (today or future)
+  const next = matches.find(m => m.isoDate >= todayISO);
+  if (!next) { wrap.innerHTML = ''; return; }
+
+  const [hh, mm] = (next.time || '15:00').split(':').map(Number);
+  const target = new Date(next.isoDate + 'T00:00:00');
+  target.setHours(hh, mm, 0, 0);
+
+  const isToday = next.isoDate === todayISO;
+  const typeLabel = next.type === 'group-a' ? 'สาย A' : next.type === 'group-b' ? 'สาย B' : next.type === 'final' ? '🏆 รอบชิงชนะเลิศ' : next.type === 'semifinal' ? 'รอบรองชนะเลิศ' : 'Playoff';
+  const dateStr = `${next.day} ${thaiM[next.month]} ${next.year+543} · ${next.time} น. · ${typeLabel}`;
+
+  wrap.innerHTML = `
+    <div class="cd-card${isToday?' cd-live':''}" id="cd-card">
+      <div class="cd-title">${isToday ? '🔴 แข่งวันนี้' : '⏱ นัดถัดไป'}</div>
+      <div class="cd-matchname">${next.teamA} vs ${next.teamB}</div>
+      <div class="cd-matchdate">${dateStr}</div>
+      <div class="cd-units">
+        <div class="cd-unit"><div class="cd-num" id="cd-d">00</div><div class="cd-label">วัน</div></div>
+        <div class="cd-unit"><div class="cd-num" id="cd-h">00</div><div class="cd-label">ชั่วโมง</div></div>
+        <div class="cd-unit"><div class="cd-num" id="cd-m">00</div><div class="cd-label">นาที</div></div>
+        <div class="cd-unit"><div class="cd-num" id="cd-s">00</div><div class="cd-label">วินาที</div></div>
+      </div>
+    </div>`;
+
+  function tick() {
+    const diff = Math.max(0, target - Date.now());
+    if (diff === 0) {
+      document.getElementById('cd-d').textContent = '00';
+      document.getElementById('cd-h').textContent = '00';
+      document.getElementById('cd-m').textContent = '00';
+      document.getElementById('cd-s').textContent = '00';
+      clearInterval(cdTimer);
+      return;
+    }
+    document.getElementById('cd-d').textContent = pad(Math.floor(diff/86400000));
+    document.getElementById('cd-h').textContent = pad(Math.floor((diff%86400000)/3600000));
+    document.getElementById('cd-m').textContent = pad(Math.floor((diff%3600000)/60000));
+    document.getElementById('cd-s').textContent = pad(Math.floor((diff%60000)/1000));
+  }
+  tick();
+  cdTimer = setInterval(tick, 1000);
+}
+
 function renderSchedule(matches) {
   const now = new Date();
   const pad = n => String(n).padStart(2,'0');
@@ -327,6 +398,7 @@ function renderSchedule(matches) {
 
   document.getElementById('schedule-wrap').innerHTML = html;
   document.getElementById('filters').style.display = 'flex';
+
 
   // Today banner
   const todayMatches = matches.filter(m => m.isoDate === todayISO);
