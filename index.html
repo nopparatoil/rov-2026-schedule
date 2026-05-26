@@ -1,1 +1,505 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตารางการแข่งขัน ROV 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a1a;
+    --accent: #00d4ff;
+    --accent2: #7b2fff;
+    --gold: #ffd700;
+    --text: #e2e8f0;
+    --text-dim: #7a8fa6;
+    --group-a: #00d4ff;
+    --group-b: #7b2fff;
+    --playoff: #ff6b35;
+    --semifinal: #ffd700;
+    --final: #ff4466;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Sarabun',sans-serif; min-height:100vh; overflow-x:hidden; }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image: linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
+  }
+  body::after {
+    content:''; position:fixed; top:-200px; left:-200px; width:600px; height:600px;
+    background:radial-gradient(circle,rgba(123,47,255,0.12) 0%,transparent 70%); pointer-events:none; z-index:0;
+  }
+  .container { position:relative; z-index:1; max-width:960px; margin:0 auto; padding:40px 20px 60px; }
+  .header { text-align:center; margin-bottom:36px; animation:fadeDown .8s ease both; }
+  .header-badge {
+    display:inline-block; background:linear-gradient(90deg,var(--accent2),var(--accent));
+    color:#fff; font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:3px;
+    padding:6px 20px; border-radius:999px; margin-bottom:16px;
+  }
+  .header h1 {
+    font-family:'Orbitron',sans-serif; font-size:clamp(28px,5vw,48px); font-weight:900; line-height:1.1;
+    background:linear-gradient(135deg,#fff 30%,var(--accent)); -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:8px;
+  }
+  .header-sub { color:var(--text-dim); font-size:15px; font-weight:300; letter-spacing:1px; }
 
+  /* Loading */
+  .loading { text-align:center; padding:60px 20px; color:var(--text-dim); }
+  .loading-spinner {
+    width:36px; height:36px; border:2px solid var(--border); border-top-color:var(--accent);
+    border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px;
+  }
+  .error-box {
+    border:1px solid rgba(255,68,102,0.4); background:rgba(255,68,102,0.07);
+    border-radius:12px; padding:20px 24px; text-align:center; color:#ff8099;
+  }
+  .error-box a { color:var(--accent); }
+
+
+
+  /* Today banner */
+  .today-banner {
+    border:1px solid rgba(0,255,136,0.35); background:rgba(0,255,136,0.07);
+    border-radius:12px; padding:14px 20px; margin-bottom:28px;
+    display:flex; align-items:center; gap:12px; font-size:14px; color:#00ff88; font-weight:600;
+    animation:fadeUp .5s ease both;
+  }
+  .today-banner .dot { width:10px; height:10px; background:#00ff88; border-radius:50%; flex-shrink:0; animation:blink 1s ease-in-out infinite; }
+  .today-banner.no-match { border-color:var(--border); background:var(--card); color:var(--text-dim); font-weight:400; }
+  .today-banner.no-match .dot { background:var(--text-dim); animation:none; }
+
+  /* Summary */
+  .summary { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:32px; animation:fadeUp .6s .1s ease both; }
+  .stat-pill { border:1px solid var(--border); background:var(--card); border-radius:10px; padding:10px 20px; text-align:center; }
+  .stat-num { font-family:'Orbitron',sans-serif; font-size:22px; font-weight:700; }
+  .stat-label { font-size:11px; color:var(--text-dim); margin-top:2px; }
+
+  /* Filters */
+  .filters { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:36px; animation:fadeUp .8s .2s ease both; }
+  .filter-btn { border:1px solid var(--border); background:var(--card); color:var(--text-dim); font-family:'Sarabun',sans-serif; font-size:13px; padding:8px 18px; border-radius:8px; cursor:pointer; transition:all .2s; }
+  .filter-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .filter-btn.active-all  { border-color:var(--accent); background:rgba(0,212,255,0.12); color:var(--accent); }
+  .filter-btn.active-a    { border-color:var(--group-a); background:rgba(0,212,255,0.12); color:var(--group-a); }
+  .filter-btn.active-b    { border-color:var(--group-b); background:rgba(123,47,255,0.15); color:var(--group-b); }
+  .filter-btn.active-playoff { border-color:var(--semifinal); background:rgba(255,215,0,0.1); color:var(--semifinal); }
+
+
+  /* Month */
+  .month-section { margin-bottom:32px; }
+  .month-label { display:flex; align-items:center; gap:12px; margin-bottom:12px; font-size:12px; font-family:'Orbitron',sans-serif; letter-spacing:2px; color:var(--text-dim); }
+  .month-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* Match card */
+  .match-card {
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:18px 22px; margin-bottom:10px;
+    display:grid; grid-template-columns:120px 1fr auto 1fr 100px;
+    align-items:center; gap:12px;
+    transition:border-color .2s,background .2s,transform .15s;
+    position:relative; overflow:hidden;
+  }
+  .match-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:3px 0 0 3px; }
+  .match-card.group-a::before { background:var(--group-a); }
+  .match-card.group-b::before { background:var(--group-b); }
+  .match-card.playoff::before { background:var(--playoff); }
+  .match-card.semifinal::before { background:var(--semifinal); box-shadow:0 0 12px var(--semifinal); }
+  .match-card.final::before { background:var(--final); box-shadow:0 0 16px var(--final); }
+  .match-card:hover { border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); transform:translateX(3px); }
+  .match-card.hidden { display:none; }
+
+  /* Countdown */
+  .cd-card{background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-radius:14px;padding:20px 24px;margin-bottom:28px;animation:fadeUp .6s ease both}
+  .cd-card .cd-title{font-size:11px;color:#00d4ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+  .cd-card .cd-matchname{font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:4px}
+  .cd-card .cd-matchdate{font-size:12px;color:#3a6a7a;margin-bottom:16px}
+  .cd-card .cd-units{display:flex;gap:12px;flex-wrap:wrap}
+  .cd-card .cd-unit{background:rgba(0,0,0,0.3);border:1px solid rgba(0,212,255,0.1);border-radius:10px;padding:10px 16px;text-align:center;min-width:60px}
+  .cd-card .cd-num{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700;color:#00d4ff;line-height:1}
+  .cd-card .cd-label{font-size:10px;color:#2a5a6a;margin-top:4px;letter-spacing:1px}
+  .cd-card.cd-live{background:rgba(0,255,136,0.06);border-color:rgba(0,255,136,0.25)}
+  .cd-card.cd-live .cd-title{color:#00ff88}
+  .cd-card.cd-live .cd-num{color:#00ff88}
+  .cd-card.cd-live .cd-unit{border-color:rgba(0,255,136,0.15)}
+
+  /* Today highlight */
+  .match-card.today { border-color:#00ff88 !important; background:rgba(0,255,136,0.07) !important; animation:pulse-today 2.5s ease-in-out infinite; }
+  .match-card.today .date-num { color:#00ff88 !important; }
+  .match-card.today .match-time { color:#00ff88 !important; }
+  .today-badge {
+    display:inline-flex; align-items:center; gap:5px; background:#00ff88; color:#050a1a;
+    font-family:'Orbitron',sans-serif; font-size:9px; font-weight:700; letter-spacing:1.5px;
+    padding:3px 10px; border-radius:999px; position:absolute; top:10px; right:14px;
+    animation:pulse-badge 2.5s ease-in-out infinite;
+  }
+  .today-badge::before { content:''; width:6px; height:6px; background:#050a1a; border-radius:50%; animation:blink 1s ease-in-out infinite; }
+
+  .date-block { text-align:center; }
+  .date-num { font-family:'Orbitron',sans-serif; font-size:28px; font-weight:700; line-height:1; color:#fff; }
+  .date-month { font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .date-day { font-size:11px; color:var(--text-dim); margin-top:1px; }
+  .team { font-size:15px; font-weight:600; line-height:1.3; }
+  .team-a { text-align:right; }
+  .team-b { text-align:left; }
+  .team-tag { display:inline-block; font-size:11px; font-weight:700; font-family:'Orbitron',sans-serif; padding:2px 7px; border-radius:4px; margin-bottom:4px; }
+  .group-a .team-tag { background:rgba(0,212,255,0.15); color:var(--group-a); }
+  .group-b .team-tag { background:rgba(123,47,255,0.2); color:#a67eff; }
+  .playoff .team-tag, .semifinal .team-tag, .final .team-tag { background:rgba(255,215,0,0.15); color:var(--gold); }
+  .vs-badge { text-align:center; font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:var(--text-dim); background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px; padding:8px 12px; white-space:nowrap; }
+  .match-time { text-align:right; font-family:'Orbitron',sans-serif; font-size:16px; font-weight:700; color:var(--text-dim); white-space:nowrap; }
+  .semifinal { background:rgba(255,215,0,0.04); }
+  .final { background:rgba(255,68,102,0.06); }
+  .stage-label { position:absolute; top:10px; right:14px; font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:1.5px; color:var(--gold); opacity:.7; }
+
+  /* Score */
+  .score-block { display:flex; align-items:center; gap:6px; justify-content:center; }
+  .score-num { font-family:'Orbitron',sans-serif; font-size:22px; font-weight:700; color:var(--text-dim); min-width:24px; text-align:center; }
+  .score-num.win { color:#00ff88; }
+  .score-num.lose { color:rgba(255,255,255,0.15); }
+  .score-sep { font-family:'Orbitron',sans-serif; font-size:14px; color:rgba(255,255,255,0.15); }
+  .match-card.has-score .team.win-team { color:#e2e8f0; opacity:1; }
+  .match-card.has-score .team.lose-team { color:rgba(255,255,255,0.2); }
+
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
+  @keyframes spin     { to{transform:rotate(360deg)} }
+  @keyframes pulse-today { 0%,100%{box-shadow:0 0 0 1px rgba(0,255,136,.3),0 0 24px rgba(0,255,136,.12)} 50%{box-shadow:0 0 0 1px rgba(0,255,136,.6),0 0 40px rgba(0,255,136,.25)} }
+  @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:.75} }
+  @keyframes blink    { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+  @media(max-width:640px){
+    .match-card { grid-template-columns:70px 1fr auto 1fr 70px; padding:14px 14px 14px 18px; gap:8px; }
+    .date-num { font-size:20px; }
+    .team { font-size:13px; }
+    .match-time { font-size:13px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-badge">🎮 ROV League Season 2026</div>
+    <h1>ตารางการแข่งขัน</h1>
+    <p class="header-sub">ROV 2026 · อัปเดตอัตโนมัติจาก Google Sheets</p>
+  </div>
+
+
+
+  <div id="today-banner-wrap"></div>
+  <div id="countdown-wrap"></div>
+
+  <div id="summary-wrap"></div>
+
+  <div class="filters" id="filters" style="display:none">
+    <button class="filter-btn active-all" onclick="filter('all',this)">ทั้งหมด</button>
+    <button class="filter-btn" onclick="filter('group-a',this)">🔵 สาย A</button>
+    <button class="filter-btn" onclick="filter('group-b',this)">🟣 สาย B</button>
+    <button class="filter-btn" onclick="filter('playoff',this)">⭐ Playoff / รอบรองฯ / รอบชิงฯ</button>
+  </div>
+
+
+  <div id="schedule-wrap">
+    <div class="loading"><div class="loading-spinner"></div><div>กำลังโหลดข้อมูล...</div></div>
+  </div>
+
+</div>
+
+<script>
+// ---- Config ----
+const SHEET_ID = '1u1oXb4T-alCqHybzDsZXrBUk3Ofrvtb00DaCOPa_51o';
+const thaiMonths = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const thaiMonthsFull = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const thaiDays = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+
+window.addEventListener('DOMContentLoaded', () => loadSheet(SHEET_ID));
+
+// ---- Fetch from Google Sheets CSV ----
+async function loadSheet(sheetId) {
+  const wrap = document.getElementById('schedule-wrap');
+  wrap.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>กำลังโหลดข้อมูล...</div></div>';
+  document.getElementById('filters').style.display = 'none';
+
+  // fetch gviz JSON — ไม่ต้อง API key, รองรับ public sheet
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    // strip /*O_o*/ prefix and closing )
+    const clean = text.slice(text.indexOf('(') + 1, text.lastIndexOf(')'));
+    const json = JSON.parse(clean);
+    if (json.status === 'error') throw new Error(json.errors?.[0]?.message || 'Sheets error');
+    const matches = parseGviz(json);
+    if (!matches.length) throw new Error('ไม่พบข้อมูลในชีต หรือ header row ไม่ถูกต้อง');
+    renderSchedule(matches);
+  } catch(e) {
+    wrap.innerHTML = `
+      <div class="error-box">
+        <div style="font-size:20px;margin-bottom:10px">⚠️</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">โหลดข้อมูลไม่ได้</div>
+        <div style="font-size:13px;opacity:.8;margin-bottom:12px">${e.message}</div>
+        <div style="font-size:12px;opacity:.6">ตรวจสอบว่า Google Sheets ตั้งเป็น "ทุกคนที่มีลิงก์ → ผู้มีสิทธิ์อ่าน"</div>
+      </div>`;
+  }
+}
+
+// ---- Parse Google Visualization JSON ----
+// Columns: A=วันที่, B=วัน, C=ทีมA, D=ทีมB, E=เวลา, F=ผลสกอร์, G=ประเภท
+const THAI_MONTHS_PARSE = {'มกราคม':1,'กุมภาพันธ์':2,'มีนาคม':3,'เมษายน':4,'พฤษภาคม':5,'มิถุนายน':6,'กรกฎาคม':7,'สิงหาคม':8,'กันยายน':9,'ตุลาคม':10,'พฤศจิกายน':11,'ธันวาคม':12};
+
+function parseThaiDate(raw) {
+  if (!raw) return null;
+  raw = String(raw).trim();
+  const m = raw.match(/^(\d{1,2})\s+(\S+)\s+(\d{4})$/);
+  if (m) {
+    const d = parseInt(m[1]), mo = THAI_MONTHS_PARSE[m[2]], be = parseInt(m[3]);
+    if (mo && be > 2400) {
+      const ce = be - 543;
+      return `${ce}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const s = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (s) return `${s[3]}-${s[2].padStart(2,'0')}-${s[1].padStart(2,'0')}`;
+  return null;
+}
+
+function getCell(row, idx) {
+  const c = row.c[idx];
+  if (!c || c.v === null || c.v === undefined) return '';
+  // gviz returns formatted value in c.f for dates, or raw value in c.v
+  return (c.f !== undefined && c.f !== null) ? String(c.f) : String(c.v);
+}
+
+function parseGviz(json) {
+  const rows = json.table.rows;
+  const matches = [];
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row.c || row.c.length < 4) continue;
+    const dateRaw = getCell(row, 0);
+    const teamA   = getCell(row, 2);
+    const teamB   = getCell(row, 3);
+    const timeRaw = getCell(row, 4);
+    const scoreRaw = getCell(row, 5);
+    const typeRaw  = getCell(row, 6);
+    if (!dateRaw || !teamA || !teamB) continue;
+    const isoDate = parseThaiDate(dateRaw);
+    if (!isoDate) continue;
+    const dt = new Date(isoDate + 'T00:00:00');
+    const type = typeRaw.trim().toLowerCase() || 'group-a';
+    matches.push({
+      isoDate,
+      day: dt.getDate(), month: dt.getMonth()+1, year: dt.getFullYear(),
+      dayOfWeek: thaiDays[dt.getDay()],
+      teamA: teamA.trim(), teamB: teamB.trim(),
+      time: timeRaw.trim() || '15:00',
+      score: scoreRaw.trim(),
+      type, stageLabel: '',
+    });
+  }
+  matches.sort((a,b) => a.isoDate.localeCompare(b.isoDate));
+  return matches;
+}
+
+// ---- Render ----
+let cdTimer = null;
+
+function buildCountdown(matches, todayISO) {
+  try {
+    const wrap = document.getElementById('countdown-wrap');
+    if (!wrap) return;
+    if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+
+    const thaiM = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const pad = n => String(Math.floor(n)).padStart(2,'0');
+    const now = new Date();
+
+    // Find next match whose kickoff time is in the future
+    let next = null;
+    for (const m of matches) {
+      if (m.isoDate < todayISO) continue;
+      const parts = (m.time || '15:00').split(':');
+      const t = new Date(m.isoDate + 'T' + parts[0].padStart(2,'0') + ':' + (parts[1]||'00').padStart(2,'0') + ':00');
+      if (t > now) { next = m; break; }
+    }
+
+    if (!next) { wrap.innerHTML = ''; return; }
+
+    const timeParts = (next.time || '15:00').split(':');
+    const target = new Date(next.isoDate + 'T' + timeParts[0].padStart(2,'0') + ':' + (timeParts[1]||'00').padStart(2,'0') + ':00');
+    const isToday = next.isoDate === todayISO;
+    const typeLabel = {'group-a':'สาย A','group-b':'สาย B','final':'🏆 รอบชิงชนะเลิศ','semifinal':'รอบรองชนะเลิศ','playoff':'Playoff'}[next.type] || next.type;
+    const dateStr = next.day + ' ' + thaiM[next.month] + ' ' + (next.year+543) + ' · ' + next.time + ' น. · ' + typeLabel;
+
+    wrap.innerHTML =
+      '<div class="cd-card' + (isToday ? ' cd-live' : '') + '">' +
+        '<div class="cd-title">' + (isToday ? '🔴 แข่งวันนี้' : '⏱ นัดถัดไป') + '</div>' +
+        '<div class="cd-matchname">' + next.teamA + ' vs ' + next.teamB + '</div>' +
+        '<div class="cd-matchdate">' + dateStr + '</div>' +
+        '<div class="cd-units">' +
+          '<div class="cd-unit"><div class="cd-num" id="cd-d">--</div><div class="cd-label">วัน</div></div>' +
+          '<div class="cd-unit"><div class="cd-num" id="cd-h">--</div><div class="cd-label">ชั่วโมง</div></div>' +
+          '<div class="cd-unit"><div class="cd-num" id="cd-m">--</div><div class="cd-label">นาที</div></div>' +
+          '<div class="cd-unit"><div class="cd-num" id="cd-s">--</div><div class="cd-label">วินาที</div></div>' +
+        '</div>' +
+      '</div>';
+
+    function tick() {
+      const diff = target - new Date();
+      if (diff <= 0) {
+        ['d','h','m','s'].forEach(k => { const el = document.getElementById('cd-'+k); if(el) el.textContent = '00'; });
+        clearInterval(cdTimer); cdTimer = null;
+        return;
+      }
+      const el_d = document.getElementById('cd-d');
+      const el_h = document.getElementById('cd-h');
+      const el_m = document.getElementById('cd-m');
+      const el_s = document.getElementById('cd-s');
+      if (el_d) el_d.textContent = pad(diff/86400000);
+      if (el_h) el_h.textContent = pad((diff%86400000)/3600000);
+      if (el_m) el_m.textContent = pad((diff%3600000)/60000);
+      if (el_s) el_s.textContent = pad((diff%60000)/1000);
+    }
+    tick();
+    cdTimer = setInterval(tick, 1000);
+  } catch(e) {
+    console.error('Countdown error:', e);
+  }
+}
+
+function renderSchedule(matches) {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const todayISO = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+
+  // Summary
+  const totalGroups = matches.filter(m => m.type === 'group-a' || m.type === 'group-b').length;
+  const totalPlayoff = matches.filter(m => !['group-a','group-b'].includes(m.type)).length;
+  const teams = new Set([...matches.map(m=>m.teamA), ...matches.map(m=>m.teamB)]).size;
+
+  document.getElementById('summary-wrap').innerHTML = `
+    <div class="summary">
+      <div class="stat-pill"><div class="stat-num" style="color:var(--accent)">${matches.length}</div><div class="stat-label">คู่การแข่งขัน</div></div>
+      <div class="stat-pill"><div class="stat-num" style="color:var(--group-a)">${teams}</div><div class="stat-label">ทีมทั้งหมด</div></div>
+      <div class="stat-pill"><div class="stat-num" style="color:var(--gold)">${totalPlayoff}</div><div class="stat-label">รอบ Playoff</div></div>
+    </div>`;
+
+  // Group by month
+  const byMonth = {};
+  for (const m of matches) {
+    const key = `${m.year}-${pad(m.month)}`;
+    if (!byMonth[key]) byMonth[key] = { label: `${thaiMonthsFull[m.month]} ${m.year + 543}`, items: [] };
+    byMonth[key].items.push(m);
+  }
+
+  let html = '';
+  for (const key of Object.keys(byMonth).sort()) {
+    const { label, items } = byMonth[key];
+    html += `<div class="month-section"><div class="month-label">${label}</div>`;
+    for (const m of items) {
+      html += buildCard(m, todayISO);
+    }
+    html += '</div>';
+  }
+
+  document.getElementById('schedule-wrap').innerHTML = html;
+  document.getElementById('filters').style.display = 'flex';
+
+
+  // Today banner
+  const todayMatches = matches.filter(m => m.isoDate === todayISO);
+  const bannerWrap = document.getElementById('today-banner-wrap');
+  if (todayMatches.length) {
+    const d = now.getDate(), mo = thaiMonths[now.getMonth()+1], y = now.getFullYear()+543;
+    bannerWrap.innerHTML = `<div class="today-banner"><div class="dot"></div><span>📅 วันนี้ ${d} ${mo} ${y} — มีการแข่งขัน <strong>${todayMatches.length} คู่</strong> เวลา 15:00 น.</span></div>`;
+    setTimeout(() => {
+      const el = document.querySelector('.match-card.today');
+      if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    }, 400);
+  } else {
+    const upcoming = matches.filter(m => m.isoDate > todayISO);
+    let nextMsg = '';
+    if (upcoming.length) {
+      const n = upcoming[0];
+      nextMsg = ` · นัดหน้า: <strong>${n.day} ${thaiMonths[n.month]} ${n.year+543}</strong>`;
+    }
+    const d = now.getDate(), mo = thaiMonths[now.getMonth()+1], y = now.getFullYear()+543;
+    bannerWrap.innerHTML = `<div class="today-banner no-match"><div class="dot"></div><span>📅 วันนี้ ${d} ${mo} ${y} — ไม่มีการแข่งขัน${nextMsg}</span></div>`;
+  }
+}
+
+function buildCard(m, todayISO) {
+  const isToday = m.isoDate === todayISO;
+  const typeClass = m.type;
+
+  let vsStyle = '', timeStyle = '', tagStyle = '';
+  if (m.type === 'semifinal') { vsStyle = 'color:var(--gold);border-color:rgba(255,215,0,0.3)'; timeStyle = 'color:var(--gold)'; }
+  if (m.type === 'playoff')   { vsStyle = 'color:var(--playoff);border-color:rgba(255,107,53,0.3)'; timeStyle = 'color:var(--playoff)'; }
+  if (m.type === 'final')     { vsStyle = 'color:var(--final);border-color:rgba(255,68,102,0.3)'; timeStyle = 'color:var(--final)'; tagStyle = 'background:rgba(255,68,102,0.15);color:var(--final)'; }
+
+  const tagIcon = m.type === 'final' ? '🏆' : (m.type === 'group-b' ? 'B' : (m.type === 'group-a' ? 'A' : '⭐'));
+  const stageEl = isToday
+    ? `<div class="today-badge">วันนี้ LIVE</div>`
+    : (m.stageLabel ? `<div class="stage-label">${m.stageLabel}</div>` : '');
+
+  const monthAbbr = `${['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][m.month]} ${String(m.year).slice(-2)}`;
+  const scoreParts = m.score ? m.score.split('-').map(s => s.trim()) : [];
+  const hasScore = scoreParts.length === 2;
+  const sA = hasScore ? parseInt(scoreParts[0]) : -1;
+  const sB = hasScore ? parseInt(scoreParts[1]) : -1;
+  const scoreEl = hasScore
+    ? `<div class="score-block">
+        <span class="score-num ${sA > sB ? 'win' : sA < sB ? 'lose' : ''}">${sA}</span>
+        <span class="score-sep">-</span>
+        <span class="score-num ${sB > sA ? 'win' : sB < sA ? 'lose' : ''}">${sB}</span>
+       </div>`
+    : `<div class="vs-badge" style="${vsStyle}">VS</div>`;
+
+  const teamAClass = hasScore ? (sA > sB ? 'win-team' : 'lose-team') : '';
+  const teamBClass = hasScore ? (sB > sA ? 'win-team' : 'lose-team') : '';
+
+  return `
+  <div data-date="${m.isoDate}" class="match-card ${typeClass}${isToday?' today':''}${hasScore?' has-score':''}">
+    ${stageEl}
+    <div class="date-block">
+      <div class="date-num">${m.day}</div>
+      <div class="date-month">${monthAbbr}</div>
+      <div class="date-day">${m.dayOfWeek}</div>
+    </div>
+    <div class="team team-a ${teamAClass}"><div class="team-tag" style="${tagStyle}">${tagIcon}</div><br>${m.teamA}</div>
+    ${scoreEl}
+    <div class="team team-b ${teamBClass}"><div class="team-tag" style="${tagStyle}">${tagIcon}</div><br>${m.teamB}</div>
+    <div class="match-time" style="${timeStyle}">${m.time}</div>
+  </div>`;
+}
+
+// ---- Filter ----
+function filter(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.className = 'filter-btn');
+  if (type==='all')     btn.className='filter-btn active-all';
+  else if (type==='group-a') btn.className='filter-btn active-a';
+  else if (type==='group-b') btn.className='filter-btn active-b';
+  else if (type==='playoff') btn.className='filter-btn active-playoff';
+
+  document.querySelectorAll('.match-card').forEach(card => {
+    if (type==='all') { card.classList.remove('hidden'); return; }
+    if (type==='playoff') {
+      const isPo = !['group-a','group-b'].some(c => card.classList.contains(c));
+      card.classList.toggle('hidden', !isPo);
+    } else {
+      card.classList.toggle('hidden', !card.classList.contains(type));
+    }
+  });
+
+  document.querySelectorAll('.month-section').forEach(s => {
+    s.style.display = s.querySelectorAll('.match-card:not(.hidden)').length ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
