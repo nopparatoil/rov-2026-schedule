@@ -141,11 +141,11 @@
   /* Score */
   .score-block { display:flex; align-items:center; gap:6px; justify-content:center; }
   .score-num { font-family:'Orbitron',sans-serif; font-size:22px; font-weight:700; color:var(--text-dim); min-width:24px; text-align:center; }
-  .score-num.win { color:#00ff88; }
-  .score-num.lose { color:var(--text-dim); opacity:.5; }
-  .score-sep { font-family:'Orbitron',sans-serif; font-size:14px; color:var(--text-dim); opacity:.5; }
-  .match-card.has-score { opacity:.85; }
-  .match-card.has-score .team { opacity:.8; }
+  .score-num.win { color:#00d4ff; }
+  .score-num.lose { color:rgba(255,255,255,0.15); }
+  .score-sep { font-family:'Orbitron',sans-serif; font-size:14px; color:rgba(255,255,255,0.15); }
+  .match-card.has-score .team.win-team { color:#e2e8f0; opacity:1; }
+  .match-card.has-score .team.lose-team { color:rgba(255,255,255,0.2); }
 
   @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
@@ -377,6 +377,9 @@ function buildCard(m, todayISO) {
        </div>`
     : `<div class="vs-badge" style="${vsStyle}">VS</div>`;
 
+  const teamAClass = hasScore ? (sA > sB ? 'win-team' : 'lose-team') : '';
+  const teamBClass = hasScore ? (sB > sA ? 'win-team' : 'lose-team') : '';
+
   return `
   <div data-date="${m.isoDate}" class="match-card ${typeClass}${isToday?' today':''}${hasScore?' has-score':''}">
     ${stageEl}
@@ -385,9 +388,9 @@ function buildCard(m, todayISO) {
       <div class="date-month">${monthAbbr}</div>
       <div class="date-day">${m.dayOfWeek}</div>
     </div>
-    <div class="team team-a"><div class="team-tag" style="${tagStyle}">${tagIcon}</div><br>${m.teamA}</div>
+    <div class="team team-a ${teamAClass}"><div class="team-tag" style="${tagStyle}">${tagIcon}</div><br>${m.teamA}</div>
     ${scoreEl}
-    <div class="team team-b"><div class="team-tag" style="${tagStyle}">${tagIcon}</div><br>${m.teamB}</div>
+    <div class="team team-b ${teamBClass}"><div class="team-tag" style="${tagStyle}">${tagIcon}</div><br>${m.teamB}</div>
     <div class="match-time" style="${timeStyle}">${m.time}</div>
   </div>`;
 }
