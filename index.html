@@ -317,8 +317,16 @@ function buildCountdown(matches, todayISO) {
   const thaiM = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const pad = n => String(n).padStart(2,'0');
 
-  // Find next match (today or future)
-  const next = matches.find(m => m.isoDate >= todayISO);
+  // Find next match whose time hasn't passed yet
+  const now = new Date();
+  let next = null;
+  for (const m of matches) {
+    if (m.isoDate < todayISO) continue;
+    const [hh2, mm2] = (m.time || '15:00').split(':').map(Number);
+    const t = new Date(m.isoDate + 'T00:00:00');
+    t.setHours(hh2, mm2, 0, 0);
+    if (t > now) { next = m; break; }
+  }
   if (!next) { wrap.innerHTML = ''; return; }
 
   const [hh, mm] = (next.time || '15:00').split(':').map(Number);
